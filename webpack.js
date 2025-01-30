@@ -1,5 +1,8 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+const dist = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
@@ -7,7 +10,7 @@ module.exports = {
   },
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist')
+    path: dist
   },
   resolve: {
     extensions: ['.ts', '.js']
@@ -18,13 +21,19 @@ module.exports = {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/
-      }
+      },
     ]
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: './src/index.html'
-    })
+      template: './src/index.html',
+
+    }),
+    new CopyPlugin({
+      patterns: [
+        { from: 'src/sw.js', to: dist },
+      ],
+    }),
   ],
   devServer: {
     devMiddleware: {

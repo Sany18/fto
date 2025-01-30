@@ -4,6 +4,18 @@
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>FTO</title>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered succesfully:', registration);
+        })
+        .catch((error) => {
+          console.error('Unable to register Service Worker:', error);
+        });
+    }
+  </script>
 </head>
 <body>
   Тестова сторінка
