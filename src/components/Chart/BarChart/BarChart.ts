@@ -32,9 +32,9 @@ export class BarChart extends Chart {
 
     this.hideSpinner();
     this.createListeners();
-    this.defineValues();
 
     this.draw(() => {
+      this.defineValues();
       this.renderData();
     });
   }
@@ -45,7 +45,7 @@ export class BarChart extends Chart {
   }
 
   defineValues() {
-    this.chartWidth = this.canvas.width;
+    this.chartWidth = this.canvas.width * this.scale;
     this.chartHeight = this.canvas.height;
     this.totalDataLength = this.chartChanks.map((chankData) => chankData.Bars.length).reduce((acc, width) => acc + width, 0);
     this.barWidth = this.chartWidth / this.totalDataLength;
@@ -70,7 +70,12 @@ export class BarChart extends Chart {
 
     this.chartChanks.forEach((_, i) => {
       this.ctx.fillStyle = ColorsService.getThemeColor(`chank-bg-color-${i + 1 % 2}`)
-      this.ctx.fillRect(i * getChankWidth(i - 1), 0, getChankWidth(i), this.chartHeight);
+      this.ctx.fillRect(
+        i * getChankWidth(i - 1) + this.shift,
+        0,
+        getChankWidth(i),
+        this.chartHeight
+      );
     });
   }
 
@@ -81,7 +86,7 @@ export class BarChart extends Chart {
 
       this.ctx.fillStyle = ColorsService.getThemeColor(priceChange > 0 ? 'bar-up-color' : 'bar-down-color');
       this.ctx.fillRect(
-        i * this.barWidth,
+        i * this.barWidth + this.shift,
         this.chartHeight - (bar.Close - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight,
         this.barWidth,
         (bar.Close - bar.Open) / (this.maxValue - this.minValue) * this.chartHeight
@@ -101,10 +106,9 @@ export class BarChart extends Chart {
   shiftChart(shift: number) {
     const nextValue = this.shift + shift;
 
-    console.log(shift);
+    this.shift = Math.max(Math.min(nextValue, 0), this.canvas.width - this.chartWidth);
 
-
-    this.shift = Math.max(Math.min(nextValue, 0), this.wrapper.clientWidth - this.chartWidth);
+    console.log(this.shift);
   }
 
   setCursorType(type: string) {
