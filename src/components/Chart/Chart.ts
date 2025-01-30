@@ -1,10 +1,11 @@
 import './Chart.scss';
 
 export class Chart {
-  private wrapper: HTMLDivElement;
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private elements: any[] = [];
+  protected wrapper: HTMLDivElement;
+  protected canvas: HTMLCanvasElement;
+  protected ctx: CanvasRenderingContext2D;
+  protected spinner: HTMLDivElement;
+  protected elements: any[] = [];
 
   constructor() {
     this.createChart();
@@ -18,8 +19,13 @@ export class Chart {
     this.canvas.classList.add('Chart__canvas');
     this.ctx = this.canvas.getContext('2d');
 
+    this.spinner = document.createElement('div');
+    this.spinner.classList.add('Chart__spinner');
+
     this.wrapper.appendChild(this.canvas);
+    this.wrapper.appendChild(this.spinner);
     this.createResizeListener();
+    this.showSpinner();
 
     return this;
   }
@@ -40,7 +46,6 @@ export class Chart {
   }
 
   // Drawings
-
   draw(callback: () => void) {
     this.elements.push(callback);
 
@@ -62,7 +67,16 @@ export class Chart {
   addDOMElement() {
     document.body.appendChild(this.wrapper);
     this.onResize();
+    return this;
+  }
 
+  showSpinner() {
+    this.spinner.style.display = 'block';
+    return this;
+  }
+
+  hideSpinner() {
+    this.spinner.style.display = 'none';
     return this;
   }
 

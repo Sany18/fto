@@ -23,7 +23,7 @@ export class DemoDataService {
     };
   }
 
-  get(url: string) {
+  async get(url: string) {
     return this.http.get(url);
   }
 
