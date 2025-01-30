@@ -1,0 +1,23 @@
+{
+  "name": "fto",
+  "version": "1.0.0",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "fto",
+  "scripts": {
+    "build": "npx webpack --mode production",
+    "dev": "npx webpack --mode development --watch",
+    "start": "npx webpack serve --mode development --config webpack.js "
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "typescript": "^5.3.3",
+    "ts-loader": "^9.4.2",
+    "html-webpack-plugin": "^5.5.0"
+  }
+}
