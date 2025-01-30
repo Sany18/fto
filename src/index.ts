@@ -9,7 +9,7 @@ const chart = new BarChart();
 chart.addDOMElement();
 
 demoDataService.getDemoData().then((data) => {
-  console.log(data);
+  console.log(data[0].Bars[100]);
 
   chart.putData(data);
 });
