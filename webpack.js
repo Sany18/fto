@@ -22,6 +22,10 @@ module.exports = {
         use: 'ts-loader',
         exclude: /node_modules/
       },
+      {
+        test: /\.s[ac]ss$/i,
+        use: [ 'style-loader', 'css-loader', 'sass-loader' ]
+      },
     ]
   },
   plugins: [
@@ -36,8 +40,14 @@ module.exports = {
     }),
   ],
   devServer: {
+    hot: true,
+    port: 9000,
+    watchFiles: ['src'],
     devMiddleware: {
       writeToDisk: true,
+    },
+    headers: {
+      'Cache-Control': 'no-store',
     },
   },
   mode: 'development',
