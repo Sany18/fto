@@ -14,6 +14,8 @@ export class BarChart extends Chart {
   protected minValue: number;
   protected maxValue: number;
 
+  protected scale = 1; // 1 - 100
+
   constructor(data?: ChankDataDto[]) {
     super();
 
@@ -24,10 +26,11 @@ export class BarChart extends Chart {
     if (!data) return;
 
     this.chartChanks = data;
-    this.hideSpinner();
-    this.draw(() => {
-      console.log('Data is ready');
 
+    this.hideSpinner();
+    this.createListeners();
+
+    this.draw(() => {
       this.defineValues();
       this.renderData();
     });
@@ -75,7 +78,48 @@ export class BarChart extends Chart {
       const volatility = bar.High - bar.Low;
 
       this.ctx.fillStyle = ColorsService.getThemeColor(priceChange > 0 ? 'bar-up-color' : 'bar-down-color');
-      this.ctx.fillRect(i * this.barWidth, this.chartHeight - (bar.Close - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight, this.barWidth, (bar.Close - bar.Open) / (this.maxValue - this.minValue) * this.chartHeight);
+      this.ctx.fillRect(
+        i * this.barWidth,
+        this.chartHeight - (bar.Close - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight,
+        this.barWidth,
+        (bar.Close - bar.Open) / (this.maxValue - this.minValue) * this.chartHeight
+      );
     });
+  }
+
+  zoom(direction: number) {
+    const nextValue = this.scale * (direction === 1 ? 1.1 : 0.9);
+
+    this.scale = Math.min(Math.max(nextValue, 1), 100);
+  }
+
+  destroyChart(): this {
+    super.destroyChart();
+    this.destroyListeners();
+
+    return this;
+  }
+
+  // Listeners
+
+  onPullHorizontal() {
+    this.render();
+  }
+
+  onZoom(e: WheelEvent) {
+    e.preventDefault();
+
+    const delta = e.deltaY;
+    const direction = delta > 0 ? -1 : 1;
+
+    this.zoom(direction);
+    this.render();
+  }
+
+  private createListeners() {
+    this.canvas.addEventListener('wheel', e => this.onZoom(e));
+  }
+
+  private destroyListeners() {
   }
 }
