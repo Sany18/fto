@@ -14,7 +14,10 @@ export class BarChart extends Chart {
   protected minValue: number;
   protected maxValue: number;
 
+  protected mouseDown = false;
+  protected mouseDownX = 0;
   protected scale = 1; // 1 - 100
+  protected shift = 0;
 
   constructor(data?: ChankDataDto[]) {
     super();
@@ -29,15 +32,14 @@ export class BarChart extends Chart {
 
     this.hideSpinner();
     this.createListeners();
+    this.defineValues();
 
     this.draw(() => {
-      this.defineValues();
       this.renderData();
     });
   }
 
   renderData() {
-    this.defineValues();
     this.renderChanks();
     this.renderBars();
   }
@@ -91,6 +93,22 @@ export class BarChart extends Chart {
     const nextValue = this.scale * (direction === 1 ? 1.1 : 0.9);
 
     this.scale = Math.min(Math.max(nextValue, 1), 100);
+
+    this.chartWidth = this.canvas.width * this.scale;
+    this.barWidth = this.chartWidth / this.totalDataLength;
+  }
+
+  shiftChart(shift: number) {
+    const nextValue = this.shift + shift;
+
+    console.log(shift);
+
+
+    this.shift = Math.max(Math.min(nextValue, 0), this.wrapper.clientWidth - this.chartWidth);
+  }
+
+  setCursorType(type: string) {
+    this.canvas.style.cursor = type;
   }
 
   destroyChart(): this {
@@ -102,7 +120,28 @@ export class BarChart extends Chart {
 
   // Listeners
 
-  onPullHorizontal() {
+  onMouseLeave() {
+    this.setCursorType('grab');
+    this.mouseDown = false;
+  }
+
+  onMouseDown(e: MouseEvent) {
+    this.mouseDownX = e.clientX;
+    this.mouseDown = true;
+    this.setCursorType('grabbing');
+  }
+
+  onMouseUp() {
+    this.mouseDown = false;
+    this.setCursorType('grab');
+  }
+
+  onPullHorizontal(e: MouseEvent) {
+    if (!this.mouseDown) return;
+
+    this.shiftChart(e.clientX - this.mouseDownX);
+    this.mouseDownX = e.clientX;
+
     this.render();
   }
 
@@ -118,8 +157,17 @@ export class BarChart extends Chart {
 
   private createListeners() {
     this.canvas.addEventListener('wheel', e => this.onZoom(e));
+    this.canvas.addEventListener('mousedown', e => this.onMouseDown(e));
+    this.canvas.addEventListener('mouseup', _ => this.onMouseUp());
+    this.canvas.addEventListener('mousemove', e => this.onPullHorizontal(e));
+    this.canvas.addEventListener('mouseleave', _ => this.onMouseLeave());
   }
 
   private destroyListeners() {
+    this.canvas.removeEventListener('wheel', e => this.onZoom(e));
+    this.canvas.removeEventListener('mousedown', e => this.onMouseDown(e));
+    this.canvas.removeEventListener('mouseup', _ => this.onMouseUp());
+    this.canvas.removeEventListener('mousemove', e => this.onPullHorizontal(e));
+    this.canvas.removeEventListener('mouseleave', _ => this.onMouseLeave());
   }
 }

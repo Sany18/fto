@@ -59,7 +59,7 @@ export class Chart {
   render() {
     requestAnimationFrame(() => {
       this.elements.forEach((element) => {
-        element();
+        element()
       });
     });
   }
