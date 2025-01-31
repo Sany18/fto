@@ -53,7 +53,18 @@ export class BarChart extends Chart {
   }
 
   calculateStaticValues() {
-    this.allBars = this.chartChanks.reduce((acc, chankData) => [...acc, ...chankData.Bars], []);
+    this.allBars = [];
+    this.chartChanks.forEach((chankData) => {
+      const startTime = chankData.ChunkStart;
+
+      chankData.Bars.forEach((bar) => {
+        this.allBars.push({
+          ...bar,
+          Time: startTime + bar.Time
+        });
+      });
+    });
+
     this.totalDataLength = this.allBars.length;
 
     for (let i = 0; i < this.allBars.length; i++) {
@@ -128,6 +139,31 @@ export class BarChart extends Chart {
     });
   }
 
+  drawMesh() {
+    // Draw a gray mesh to represent coordinate system for data
+    const stepX = this.chartBarsAreaWidth / 20;
+    const stepY = this.chartHeight / 10;
+
+    this.ctx.strokeStyle = 'gray';
+    this.ctx.lineWidth = 0.5;
+
+    // Draw vertical lines
+    for (let x = 0; x <= this.chartBarsAreaWidth; x += stepX) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(x + this.shift, 0);
+      this.ctx.lineTo(x + this.shift, this.chartHeight);
+      this.ctx.stroke();
+    }
+
+    // Draw horizontal lines
+    for (let y = 0; y <= this.chartHeight; y += stepY) {
+      this.ctx.beginPath();
+      this.ctx.moveTo(this.shift, y);
+      this.ctx.lineTo(this.chartBarsAreaWidth + this.shift, y);
+      this.ctx.stroke();
+    }
+  }
+
   drawBars() {
     this.allBars.forEach((bar, i) => {
       const priceChange = bar.Close - bar.Open;
@@ -163,6 +199,17 @@ export class BarChart extends Chart {
       this.chartHeight + 1
     );
 
+    // Draw hirizontal white rectangle to always cover bottom right place on screen
+    // Width = this.chartWidth
+    // Height = bottomLegendHeight
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(
+      this.shift,
+      this.chartHeight,
+      this.chartWidth,
+      bottomLegendHeight
+    );
+
     // Draw vertical black line at the left edge of white rectangle
     this.ctx.strokeStyle = 'black';
     this.ctx.lineWidth = 1;
@@ -172,8 +219,56 @@ export class BarChart extends Chart {
     this.ctx.stroke();
   }
 
+  drawBottomLabels() {
+    const labelCount = 10;
+    const step = Math.floor(this.totalDataLength / labelCount);
+
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = `${fontHeight}px Arial`;
+    this.ctx.textAlign = 'center';
+
+    for (let i = 1; i < labelCount; i++) { // Start from 1 to avoid the first label
+      const barIndex = Math.min(i * step, this.totalDataLength - 1);
+      const bar = this.allBars[barIndex];
+      const label = new Date(bar?.Time).toLocaleTimeString();
+
+      const x = barIndex * this.barWidth + this.barWidth / 2 + this.shift;
+      const y = this.chartHeight + fontHeight + legendVerticalPadding;
+
+      this.ctx.fillText(label, x, y);
+    }
+  }
+
+  drawRightLabels() {
+    const labelCount = 10;
+    const step = (this.maxValue - this.minValue) / labelCount;
+    const minLabelSpacing = fontHeight + 5; // Minimum spacing between labels
+
+    this.ctx.fillStyle = 'black';
+    this.ctx.font = `${fontHeight}px Arial`;
+    this.ctx.textAlign = 'right';
+
+    let lastLabelY = -Infinity;
+
+    for (let i = 0; i <= labelCount; i++) {
+      const value = this.minValue + i * step;
+      const label = value.toFixed(2);
+
+      const x = this.canvas.width - rightLegendWidth + 5;
+      const y = this.chartHeight - (value - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight;
+
+      if (y >= fontHeight && y <= this.chartHeight - fontHeight && Math.abs(y - lastLabelY) >= minLabelSpacing) {
+        this.ctx.fillText(label, x, y);
+        lastLabelY = y;
+      }
+    }
+  }
+
   drawLegend() {
+    this.drawMesh();
     this.drawSeparators();
+    this.drawBottomLabels();
+    this.drawRightLabels();
   }
 
   // Listeners
