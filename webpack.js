@@ -10,7 +10,8 @@ module.exports = {
   },
   output: {
     filename: 'bundle.js',
-    path: dist
+    path: dist,
+    publicPath: '/fto/'
   },
   resolve: {
     extensions: ['.ts', '.js']
