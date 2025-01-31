@@ -239,6 +239,7 @@ export class BarChart extends Chart {
     }
   }
 
+  // AI help here
   drawRightLabels() {
     const labelCount = 10;
     const step = (this.maxValue - this.minValue) / labelCount;
@@ -254,7 +255,7 @@ export class BarChart extends Chart {
       const value = this.minValue + i * step;
       const label = value.toFixed(2);
 
-      const x = this.canvas.width - rightLegendWidth + 5;
+      const x = this.canvas.width - 5; // Adjusted to draw inside the right legend area
       const y = this.chartHeight - (value - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight;
 
       if (y >= fontHeight && y <= this.chartHeight - fontHeight && Math.abs(y - lastLabelY) >= minLabelSpacing) {
