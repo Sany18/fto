@@ -17,7 +17,7 @@ export class BarChart extends Chart {
   protected mouseDown = false;
   protected mouseDownX = 0;
   protected scale = 1; // 1 - 100
-  protected shiftInPixels = 0;
+  protected shift = 0;
 
   constructor(data?: ChankDataDto[]) {
     super();
@@ -71,7 +71,7 @@ export class BarChart extends Chart {
     this.chartChanks.forEach((_, i) => {
       this.ctx.fillStyle = ColorsService.getThemeColor(`chank-bg-color-${i + 1 % 2}`)
       this.ctx.fillRect(
-        i * getChankWidth(i - 1) + this.shiftInPixels,
+        i * getChankWidth(i - 1) + this.shift,
         0,
         getChankWidth(i),
         this.chartHeight
@@ -86,7 +86,7 @@ export class BarChart extends Chart {
 
       this.ctx.fillStyle = ColorsService.getThemeColor(priceChange > 0 ? 'bar-up-color' : 'bar-down-color');
       this.ctx.fillRect(
-        i * this.barWidth + this.shiftInPixels,
+        i * this.barWidth + this.shift,
         this.chartHeight - (bar.Close - this.minValue) / (this.maxValue - this.minValue) * this.chartHeight,
         this.barWidth,
         (bar.Close - bar.Open) / (this.maxValue - this.minValue) * this.chartHeight
@@ -94,24 +94,32 @@ export class BarChart extends Chart {
     });
   }
 
-  zoom(direction: number, x: number) {
-    const nextValue = this.scale * (direction === 1 ? 1.1 : 0.9);
-    this.scale = Math.min(Math.max(nextValue, 1), 100);
+  zoom(e: WheelEvent) {
+    const delta = e.deltaY;
+    const direction = delta > 0 ? -1 : 1;
+    const mouseX = e.offsetX;
 
-    this.chartWidth = this.canvas.width * this.scale;
+    const prevScale = this.scale;
+    const nextValue = this.scale * (direction === 1 ? 1.1 : 0.9);
+    const nextScale = Math.min(Math.max(nextValue, 1), 100);
+
+    this.chartWidth = this.canvas.width * nextScale;
     this.barWidth = this.chartWidth / this.totalDataLength;
 
-    const cursorPercentagePosition = x / this.canvas.width;
-    const shift = this.chartWidth * cursorPercentagePosition - (this.canvas.width / 2);
-    console.log(shift);
+    // Here was the AI help
+    const scaleRatio = nextScale / prevScale;
+    const mouseXInChartSpace = mouseX - this.shift;
+    const newShift = mouseX - mouseXInChartSpace * scaleRatio;
 
-    this.shiftChart(-shift);
+    this.scale = nextScale;
+    this.shiftChart(newShift)
+
     this.render();
   }
 
   shiftChart(nextValue: number) {
-    this.shiftInPixels = Math.max(Math.min(nextValue, 0), this.canvas.width - this.chartWidth);
-    console.log('current shift', this.shiftInPixels);
+    this.shift = Math.max(Math.min(nextValue, 0), this.canvas.width - this.chartWidth);
+    console.log('current shift', this.shift);
 
     this.render();
   }
@@ -148,17 +156,14 @@ export class BarChart extends Chart {
   onPullHorizontal(e: MouseEvent) {
     if (!this.mouseDown) return;
 
-    this.shiftChart(this.shiftInPixels + e.clientX - this.mouseDownX);
+    this.shiftChart(this.shift + e.clientX - this.mouseDownX);
     this.mouseDownX = e.clientX;
   }
 
   onZoom(e: WheelEvent) {
     e.preventDefault();
 
-    const delta = e.deltaY;
-    const direction = delta > 0 ? -1 : 1;
-
-    this.zoom(direction, e.clientX);
+    this.zoom(e);
   }
 
   private createListeners() {
