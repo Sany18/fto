@@ -46,6 +46,7 @@ export class Chart {
   }
 
   // Drawings
+
   draw(callback: () => void) {
     this.elements.push(callback);
 
